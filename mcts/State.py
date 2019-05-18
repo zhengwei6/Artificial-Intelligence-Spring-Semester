@@ -5,8 +5,8 @@ class State(object):
         self.board      = board
         self.playerNo   = playerNo
         self.visitCount = visitCount
-        self.winScore   = winScore
-    
+        self.winScore   = winScore  #github UCT 算法 (nodeWinScore / (double) nodeVisit) + 1.41 * Math.sqrt(Math.log(totalVisit) / (double) nodeVisit)
+        
     def getBoard(self):
         return self.board
     
@@ -35,7 +35,10 @@ class State(object):
         self.winScore = winScore
     
     def getAllPossibleStates(self):
-        #TODO return all the possible state for current state (type: list)
+        """
+        要回傳這個node的所有下一個可能的state object，並且用 list 方式 ， 記得那些回傳的 state 要更新 board、playerNo、visitCount、winScore
+        """
+        #TODO return all the possible state for current state (type: list of State)
     
     def incrementVisit(self):
         self.visitCount += 1

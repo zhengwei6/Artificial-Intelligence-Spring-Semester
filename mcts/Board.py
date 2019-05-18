@@ -2,14 +2,11 @@ import numpy as np
 class Board(object):
     DEFAULT_BOARD_SIZE = 8
     IN_PROGRESS        = -1
-    BLACK              = 1
-    WHITE              = 2
     EMPTY              = 0
     AVAILABLE_ONE_MOVES    = [[-1,0] , [0,1], [1,0], [0,-1]]
     AVAILABLE_CROSS_MOVES  = [[-2,0] , [0,2], [2,0], [0,-2]]
-    AVAILABLE_CHOICES  = {'TP' : [-1,0] , 'RT' : [0,1] , 'DN' : [1,0] , 'LT' : [0,-1] , 'CT' : [-2,0] , 'CR' : [0,2] , 'CD' : [2,0] , 'CL' : [0,-2]}
 
-    def __init__(self,boardValues=[],totalMoves=0):
+    def __init__(self,boardValues=[],blackMovesNum=0,whiteMovesNum=0):
         # Create the initialized state and initialized board
         # Example
         # boardValues = [[0,1,1,0,0,0,0,0],
@@ -20,9 +17,9 @@ class Board(object):
         #                [0,1,1,0,0,2,2,2],
         #                [0,1,1,0,0,2,2,2],
         #                [0,1,1,0,0,2,2,2]]
-
-        self.boardValues = boardValues
-        self.totalMoves  = totalMoves
+        self.boardValues    = boardValues
+        self.blackMovesNum  = blackMovesNum
+        self.whiteMovesNum  = whiteMovesNum
 
     def moveOneStep(self,playerNo,oneMove):
         """
@@ -36,23 +33,23 @@ class Board(object):
         finalRow   = oneMove[1][0]
         finalCol   = oneMove[1][1]
 
-        if self.boardValues[initialRow][initialCol] == playerNo and self.boardValues[finalRow][finalCol] == EMPTY:
-            if [initialRow-finalRow, initialCol-finalCol] in AVAILABLE_ONE_MOVES:
+        if self.boardValues[initialRow][initialCol] == playerNo and self.boardValues[finalRow][finalCol] == self.EMPTY:
+            if [initialRow-finalRow, initialCol-finalCol] in self.AVAILABLE_ONE_MOVES:
                 # 上下左右動一步
-                self.boardValues[initialRow][initialCol] = EMPTY
+                self.boardValues[initialRow][initialCol] = self.EMPTY
                 self.boardValues[finalRow][finalRow] = playerNo
                 return True
-            elif [initialRow-finalRow, initialCol-finalCol] in AVAILABLE_CROSS_MOVES and \
+            elif [initialRow-finalRow, initialCol-finalCol] in self.AVAILABLE_CROSS_MOVES and \
                 self.boardValues[initialRow + int((initialRow-finalRow)/2) ][ initialCol + int((initialCol-finalCol)/2)] == opponent:
                 # 跨一步吃掉對手
-                self.boardValues[initialRow][initialCol] = EMPTY
+                self.boardValues[initialRow][initialCol] = self.EMPTY
                 self.boardValues[initialRow + int((initialRow-finalRow)/2) ][ initialCol + int((initialCol-finalCol)/2)] = EMPTY
                 self.boardValues[finalRow][finalRow] = playerNo
                 return True
-            elif [initialRow-finalRow, initialCol-finalCol] in AVAILABLE_CROSS_MOVES and \
+            elif [initialRow-finalRow, initialCol-finalCol] in self.AVAILABLE_CROSS_MOVES and \
                 self.boardValues[initialRow + int((initialRow-finalRow)/2) ][ initialCol + int((initialCol-finalCol)/2)] == playerNo:
                 # 跨一步自己
-                self.boardValues[initialRow][initialCol] = EMPTY
+                self.boardValues[initialRow][initialCol] = self.EMPTY
                 self.boardValues[finalRow][finalRow] = playerNo
                 return True
             return False
@@ -77,10 +74,15 @@ class Board(object):
                 break
         
         if legal:
+            if playerNo == 1:
+                self.blackMovesNum += 1
+            else:
+                self.whiteMovesNum += 1
             return True
         else:
             # 還原
             self.boardValues = tempBoardValues
+            print("[Error] : Fail to move one step!")
             return False
 
     def getBoardValues(self):
@@ -88,10 +90,68 @@ class Board(object):
     
     def setBoardValues(self,boardValues):
         self.boardValues = boardValues
-    
+
+    def checkInRegion(self):
+        """
+        @return 
+        如果黑棋全部的棋都在目標區域內回傳 1 如果白棋全部都在目標區域內回傳 2 都沒有則回傳 -1
+        如果黑棋全部都被吃掉，白棋會繼續玩到直到全部白子皆到達目標區域or完成200回合才會結束遊戲 (問助教的)
+        """
+        # check for black
+        blackwin = 0
+        whitewin = 0
+        for i in range(8):
+            for j in range(8):
+                if self.boardValues[i][j] == 1 and ( j != 6 and j != 7 ):
+                    blackwin = -1
+                    break
+                elif self.boardValues[i][j] == 1 and ( j == 6 or j == 7 ):
+                    blackwin = 1
+            if blcakwin == -1:
+                break
+        
+        for i in range(8):
+            for j in range(8):
+                if self.boardValues[i][j] == 2 and ( j != 0 and j != 1):
+                    whitewin = -1
+                    break
+                elif self.boardValues[i][j] == 2 and ( j == 0 or j == 1):
+                    whitewin = 1
+            if whitewin = -1:
+                break
+        
+        if blackwin == 1 and whitewin == 1:
+            print("[Error] : Two all in region?")
+        if blackwin == 1:
+            return 1
+        if whitewin == 1:
+            return 2
+        return -1
+                    
     def checkStatus(self):
-        #TODO check for now status and return who win or IN_PROGRESS 
-        return IN_PROGRESS 
+        """
+        @param
+        @return  如果是黑子獲勝 回傳 1 如果是白子獲勝 回傳 2 如果還在進行中 回傳 IN_PROGRESS (-1) 平手 DRAW (0)
+        """
+        allInRegion = self.checkInRegion()
+
+        if self.whiteMovesNum == 200 or self.blackMovesNum == 200 or allInRegion != -1:
+            blackNum = 0
+            whiteNum = 0
+            for i in range(8):
+                for j in range(8):
+                    if ( j == 6 or j == 7) and self.boardValues[i][j] == 1:
+                        blackNum += 1
+                    if ( j == 0 or j == 1) and self.boardValues[i][j] == 2:
+                        whiteNum += 1
+            if blackNum > whiteNum:
+                return 1
+            elif blackNum < whiteNum:
+                return 2
+            else:
+                return self.DRAW
+       
+        return self.IN_PROGRESS 
     
     
 
