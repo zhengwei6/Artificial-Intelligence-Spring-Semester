@@ -11,9 +11,8 @@ def selectPromisingNode(rootNode):
     找到 Expand node
     """
     node = rootNode
-    while (len(node.getChild()) != 0) {
-            node = UCT.findBestNodeWithUCT(node);
-    }
+    while len(node.getChild()) != 0:
+        node = findBestNodeWithUCT(node)
     return node
 
 def backPropogation(nodeToExplore, playerNo):
@@ -48,7 +47,8 @@ def findNextMove(board, playerNo):
         promisingNode = selectPromisingNode(rootNode)
         
         # Phase 2 - Expansion
-        expandNode(promisingNode)
+        if promisingNode.getState().getBoard().checkStatus() == Board.IN_PROGRESS:
+            expandNode(promisingNode)
         
         # Phase 3 - Simulation
         nodeToExplore = promisingNode
