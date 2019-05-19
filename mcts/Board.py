@@ -26,31 +26,30 @@ class Board(object):
         @param      playerNo : 1 代表黑色 2 代表白色   oneMove: 一個 list 從 a 移動到 b  [a,b]
         @return     如果是一個合法的移動，會移動該步並回傳True，如果是一個不合法的移動，不移動該步並回傳False
         """
-        oneMove = oneMove.astype(int)
+        #oneMove = oneMove.astype(int)
         opponent = 3 - playerNo
         initialRow = oneMove[0][0]
         initialCol = oneMove[0][1]
         finalRow   = oneMove[1][0]
         finalCol   = oneMove[1][1]
-
         if self.boardValues[initialRow][initialCol] == playerNo and self.boardValues[finalRow][finalCol] == self.EMPTY:
             if [initialRow-finalRow, initialCol-finalCol] in self.AVAILABLE_ONE_MOVES:
                 # 上下左右動一步
                 self.boardValues[initialRow][initialCol] = self.EMPTY
-                self.boardValues[finalRow][finalRow] = playerNo
+                self.boardValues[finalRow][finalCol] = playerNo
                 return True
             elif [initialRow-finalRow, initialCol-finalCol] in self.AVAILABLE_CROSS_MOVES and \
-                self.boardValues[initialRow + int((initialRow-finalRow)/2) ][ initialCol + int((initialCol-finalCol)/2)] == opponent:
+                self.boardValues[initialRow - int((initialRow-finalRow)/2) ][ initialCol - int((initialCol-finalCol)/2)] == opponent:
                 # 跨一步吃掉對手
                 self.boardValues[initialRow][initialCol] = self.EMPTY
-                self.boardValues[initialRow + int((initialRow-finalRow)/2) ][ initialCol + int((initialCol-finalCol)/2)] = EMPTY
-                self.boardValues[finalRow][finalRow] = playerNo
+                self.boardValues[initialRow - int((initialRow-finalRow)/2) ][ initialCol - int((initialCol-finalCol)/2)] = EMPTY
+                self.boardValues[finalRow][finalCol] = playerNo
                 return True
             elif [initialRow-finalRow, initialCol-finalCol] in self.AVAILABLE_CROSS_MOVES and \
-                self.boardValues[initialRow + int((initialRow-finalRow)/2) ][ initialCol + int((initialCol-finalCol)/2)] == playerNo:
+                self.boardValues[initialRow - int((initialRow-finalRow)/2) ][ initialCol - int((initialCol-finalCol)/2)] == playerNo:
                 # 跨一步自己
                 self.boardValues[initialRow][initialCol] = self.EMPTY
-                self.boardValues[finalRow][finalRow] = playerNo
+                self.boardValues[finalRow][finalCol] = playerNo
                 return True
             return False
         
@@ -65,10 +64,8 @@ class Board(object):
         # player     : 1 
         # moveList   : [[3,4] , [3,6] , [3,8]]
         tempBoardValues = self.boardValues
-        movePosNumpy = np.reshape(moveList, (-1, 2))
         legal = True
-        
-        for row in movePosNumpy:
+        for row in moveList:
             legal = self.moveOneStep(playerNo,row)
             if legal == False:
                 break
@@ -107,7 +104,7 @@ class Board(object):
                     break
                 elif self.boardValues[i][j] == 1 and ( j == 6 or j == 7 ):
                     blackwin = 1
-            if blcakwin == -1:
+            if blackwin == -1:
                 break
         
         for i in range(8):
@@ -117,7 +114,7 @@ class Board(object):
                     break
                 elif self.boardValues[i][j] == 2 and ( j == 0 or j == 1):
                     whitewin = 1
-            if whitewin = -1:
+            if whitewin == -1:
                 break
         
         if blackwin == 1 and whitewin == 1:
