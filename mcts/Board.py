@@ -1,61 +1,69 @@
 import numpy as np
+
+
 class Board(object):
     DEFAULT_BOARD_SIZE = 8
-    IN_PROGRESS        = -1
-    EMPTY              = 0
-    AVAILABLE_ONE_MOVES    = [[-1,0] , [0,1], [1,0], [0,-1]]
-    AVAILABLE_CROSS_MOVES  = [[-2,0] , [0,2], [2,0], [0,-2]]
+    IN_PROGRESS = -1
+    GAME_DRAW = -2
+    EMPTY = 0
+    AVAILABLE_ONE_MOVES = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+    AVAILABLE_CROSS_MOVES = [[-2, 0], [0, 2], [2, 0], [0, -2]]
 
-    def __init__(self,boardValues=[],blackMovesNum=0,whiteMovesNum=0):
-        # Create the initialized state and initialized board
-        # Example
-        # boardValues = [[0,1,1,0,0,0,0,0],
-        #                [0,1,1,0,0,2,2,2],
-        #                [0,1,1,0,0,2,2,2],
-        #                [0,1,1,0,0,2,2,2],
-        #                [0,1,1,0,0,2,2,2],
-        #                [0,1,1,0,0,2,2,2],
-        #                [0,1,1,0,0,2,2,2],
-        #                [0,1,1,0,0,2,2,2]]
-        self.boardValues    = boardValues
-        self.blackMovesNum  = blackMovesNum
-        self.whiteMovesNum  = whiteMovesNum
+    def __init__(self, boardValues=None, blackMovesNum=0, whiteMovesNum=0):
+        """
+        Create the initialized state and initialized board
+        Example
+        boardValues = [[0,1,1,0,0,0,0,0],
+                       [0,1,1,0,0,2,2,2],
+                       [0,1,1,0,0,2,2,2],
+                       [0,1,1,0,0,2,2,2],
+                       [0,1,1,0,0,2,2,2],
+                       [0,1,1,0,0,2,2,2],
+                       [0,1,1,0,0,2,2,2],
+                       [0,1,1,0,0,2,2,2]]
+        """
+        self.boardValues = boardValues
+        self.blackMovesNum = blackMovesNum
+        self.whiteMovesNum = whiteMovesNum
 
-    def moveOneStep(self,playerNo,oneMove):
+    def moveOneStep(self, playerNo, oneMove):
         """
         @param      playerNo : 1 代表黑色 2 代表白色   oneMove: 一個 list 從 a 移動到 b  [a,b]
         @return     如果是一個合法的移動，會移動該步並回傳True，如果是一個不合法的移動，不移動該步並回傳False
         """
-        #oneMove = oneMove.astype(int)
+        # oneMove = oneMove.astype(int)
         opponent = 3 - playerNo
         initialRow = oneMove[0][0]
         initialCol = oneMove[0][1]
-        finalRow   = oneMove[1][0]
-        finalCol   = oneMove[1][1]
+        finalRow = oneMove[1][0]
+        finalCol = oneMove[1][1]
         if self.boardValues[initialRow][initialCol] == playerNo and self.boardValues[finalRow][finalCol] == self.EMPTY:
-            if [initialRow-finalRow, initialCol-finalCol] in self.AVAILABLE_ONE_MOVES:
+            if [initialRow - finalRow, initialCol - finalCol] in self.AVAILABLE_ONE_MOVES:
                 # 上下左右動一步
                 self.boardValues[initialRow][initialCol] = self.EMPTY
                 self.boardValues[finalRow][finalCol] = playerNo
                 return True
-            elif [initialRow-finalRow, initialCol-finalCol] in self.AVAILABLE_CROSS_MOVES and \
-                self.boardValues[initialRow - int((initialRow-finalRow)/2) ][ initialCol - int((initialCol-finalCol)/2)] == opponent:
+            elif [initialRow - finalRow, initialCol - finalCol] in self.AVAILABLE_CROSS_MOVES and \
+                    self.boardValues[initialRow - int((initialRow - finalRow) / 2)][
+                        initialCol - int((initialCol - finalCol) / 2)] == opponent:
                 # 跨一步吃掉對手
                 self.boardValues[initialRow][initialCol] = self.EMPTY
-                self.boardValues[initialRow - int((initialRow-finalRow)/2) ][ initialCol - int((initialCol-finalCol)/2)] = EMPTY
+                self.boardValues[initialRow - int((initialRow - finalRow) / 2)][
+                    initialCol - int((initialCol - finalCol) / 2)] = self.EMPTY
                 self.boardValues[finalRow][finalCol] = playerNo
                 return True
-            elif [initialRow-finalRow, initialCol-finalCol] in self.AVAILABLE_CROSS_MOVES and \
-                self.boardValues[initialRow - int((initialRow-finalRow)/2) ][ initialCol - int((initialCol-finalCol)/2)] == playerNo:
+            elif [initialRow - finalRow, initialCol - finalCol] in self.AVAILABLE_CROSS_MOVES and \
+                    self.boardValues[initialRow - int((initialRow - finalRow) / 2)][
+                        initialCol - int((initialCol - finalCol) / 2)] == playerNo:
                 # 跨一步自己
                 self.boardValues[initialRow][initialCol] = self.EMPTY
                 self.boardValues[finalRow][finalCol] = playerNo
                 return True
             return False
-        
-        return False         
 
-    def performMove(self,playerNo, moveList):
+        return False
+
+    def performMove(self, playerNo, moveList):
         """
         @param    playerNo : 1 代表黑色 2 代表白色 moveList: 從第一個位置移動到最後一個位置的一連串位置
         @return   如果這一連串的移動是合法的話就成功移動並且return True，如果這是一個不合法的移動，就會return False
@@ -66,10 +74,10 @@ class Board(object):
         tempBoardValues = self.boardValues
         legal = True
         for row in moveList:
-            legal = self.moveOneStep(playerNo,row)
-            if legal == False:
+            legal = self.moveOneStep(playerNo, row)
+            if legal is False:
                 break
-        
+
         if legal:
             if playerNo == 1:
                 self.blackMovesNum += 1
@@ -84,8 +92,8 @@ class Board(object):
 
     def getBoardValues(self):
         return self.boardValues
-    
-    def setBoardValues(self,boardValues):
+
+    def setBoardValues(self, boardValues):
         self.boardValues = boardValues
 
     def checkInRegion(self):
@@ -99,24 +107,24 @@ class Board(object):
         whitewin = 0
         for i in range(8):
             for j in range(8):
-                if self.boardValues[i][j] == 1 and ( j != 6 and j != 7 ):
+                if self.boardValues[i][j] == 1 and (j != 6 and j != 7):
                     blackwin = -1
                     break
-                elif self.boardValues[i][j] == 1 and ( j == 6 or j == 7 ):
+                elif self.boardValues[i][j] == 1 and (j == 6 or j == 7):
                     blackwin = 1
             if blackwin == -1:
                 break
-        
+
         for i in range(8):
             for j in range(8):
-                if self.boardValues[i][j] == 2 and ( j != 0 and j != 1):
+                if self.boardValues[i][j] == 2 and (j != 0 and j != 1):
                     whitewin = -1
                     break
-                elif self.boardValues[i][j] == 2 and ( j == 0 or j == 1):
+                elif self.boardValues[i][j] == 2 and (j == 0 or j == 1):
                     whitewin = 1
             if whitewin == -1:
                 break
-        
+
         if blackwin == 1 and whitewin == 1:
             print("[Error] : Two all in region?")
         if blackwin == 1:
@@ -124,7 +132,7 @@ class Board(object):
         if whitewin == 1:
             return 2
         return -1
-                    
+
     def checkStatus(self):
         """
         @param
@@ -137,19 +145,15 @@ class Board(object):
             whiteNum = 0
             for i in range(8):
                 for j in range(8):
-                    if ( j == 6 or j == 7) and self.boardValues[i][j] == 1:
+                    if (j == 6 or j == 7) and self.boardValues[i][j] == 1:
                         blackNum += 1
-                    if ( j == 0 or j == 1) and self.boardValues[i][j] == 2:
+                    if (j == 0 or j == 1) and self.boardValues[i][j] == 2:
                         whiteNum += 1
             if blackNum > whiteNum:
                 return 1
             elif blackNum < whiteNum:
                 return 2
             else:
-                return self.DRAW
-       
-        return self.IN_PROGRESS 
-    
-    
+                return self.GAME_DRAW
 
-    
+        return self.IN_PROGRESS
