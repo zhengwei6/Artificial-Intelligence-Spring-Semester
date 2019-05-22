@@ -1,17 +1,14 @@
-from mcts.Node import Node
-
-
+from Node  import Node
+from State import State
 class Tree(object):
-    def __init__(self, root=Node()):
+    def __init__(self):
         # Create the initialized state and initialized node
-        self.rootNode = root
+        self.rootNode = Node()
 
     def getRoot(self):
         return self.rootNode
-
-    def setRoot(self, node):
+    def setRoot(node):
         self.rootNode = node
-
-    def addChild(self, parent, child):
-        # TODO add child for parent
+    def addChild(parent, child):
+        #TODO add child for parent
         pass

@@ -1,39 +1,41 @@
-from mcts.State import State
-
-
+from State import State
 class Node(object):
-    def __init__(self, parent=None, state=None, childs=None):
+    def __init__(self, parent=None, children=[]):
         # Create the initialized state and initialized node
         self.parent = parent
-        self.childs = childs
-        self.state = state
-
+        self.children = children
+        self.state = State()
+    
     def getState(self):
         return self.state
-
-    def setState(self, state):
+    
+    def setState(self,state):
         self.state = state
 
     def getChild(self):
-        return self.childs
-
-    def setChild(self, children):
-        self.childs = children
-
+        return self.children
+    
+    def setChild(self,children):
+        self.children = children
+    
     def getParent(self):
         return self.parent
 
-    def setParent(self, parent):
+    def setParent(self,parent):
         self.parent = parent
 
     def getRandomChildNode(self):
         """
         @param
         @return return a random child Node
-        """
-        # TODO
-        pass
-
-    def getChildWithMaxScore(self):
-        # TODO return the child having ???
+        """ 
+        newNodeList = []
+        newStateList = self.state.getAllPossibleStates()
+        for newState in newStateList:
+            newNode = Node(parent=self)
+            newNode.state = newState
+            self.children.append(newNode)
+        
+    def getChildWithMaxScore():
+        #TODO return the child having ???
         pass
