@@ -113,37 +113,52 @@ class State(object):
             for posElement in avaliableChessPos:
                 validMove = []
                 for movElement in self.AVAILABLE_ONE_MOVES :
-                    if (posElement[0] + movElement[0]) >= 0 and (posElement[0] + movElement[0]) < 8 and (posElement[1] + movElement[1]) >= 0 and (posElement[1] + movElement[1]) < 8 and boardValues[posElement[0] + movElement[0]][posElement[1] + movElement[1]] == 0:
+                    row = posElement[0] + movElement[0]
+                    col = posElement[1] + movElement[1]
+                    if ( row >= 0) and (row < 8) and ( col >= 0) and (col < 8) and (boardValues[row][col] == 0):
                         validMove.append(movElement)
-                for movElement in  self.AVAILABLE_CROSS_MOVES:
-                    if (posElement[0] + movElement[0]) >= 0 and (posElement[0] + movElement[0]) < 8 and (posElement[1] + movElement[1]) >= 0 and (posElement[1] + movElement[1]) < 8 and boardValues[posElement[0] + movElement[0]][posElement[1] + movElement[1]] == 0 and boardValues[posElement[0] + int(movElement[0]/2)][posElement[1] +  int(movElement[1]/2)] != 0 :
+                
+                for movElement in self.AVAILABLE_CROSS_MOVES:
+                    row = posElement[0] + movElement[0]
+                    col = posElement[1] + movElement[1]
+                    mir = posElement[0] + int(movElement[0]/2)
+                    mic = posElement[1] + int(movElement[1]/2)
+                    if ( row >= 0) and (row < 8) and ( col >= 0) and (col < 8)  and (boardValues[row][col] == 0) and (boardValues[mir][mic] != 0):
                         validMove.append(movElement)
+                
                 if len(validMove) == 0:
-
                     avaliableChessPos.remove(posElement)
                 else:
                     avaliableMove.append(validMove)
+                
+            if len(avaliableChessPos) == 0:
+                playerNo = 3 - playerNo
+                continue
             
             round = 0
             while True:
-                randPos    = random.randint( 0 , len(avaliableChessPos)-1)
-                randMov    = random.randint( 0 , len(avaliableMove[randPos])-1)
+                try:
+                    randPos    = random.randint( 0 , len(avaliableChessPos)-1)
+                    randMov    = random.randint( 0 , len(avaliableMove[randPos])-1)
                 
-                position   = avaliableChessPos[randPos]
-                move       = avaliableMove[randPos][randMov]
+                    position   = avaliableChessPos[randPos]
+                    move       = avaliableMove[randPos][randMov]
                 
-                row      = position[0] + move[0]
-                col      = position[1] + move[1]
-                ans      = False
-                if row < 8 and row >= 0 and col < 8 and col >= 0 and board.boardValues[row][col] == 0 :
-                    ans  = board.performMove(playerNo,[ [position[0],position[1]] , [row, col ] ])
-                round = round + 1
-                if round > 10:
-                    playerNo = 3 - playerNo
-                    break
-                if ans == True:
-                    playerNo = 3 - playerNo
-                    break
+                    row      = position[0] + move[0]
+                    col      = position[1] + move[1]
+                    ans      = False
+                    if row < 8 and row >= 0 and col < 8 and col >= 0 and board.boardValues[row][col] == 0 :
+                        ans  = board.performMove(playerNo,[ [position[0],position[1]] , [row, col ] ])
+                    round = round + 1
+                    if round > 10:
+                        playerNo = 3 - playerNo
+                        break
+                    if ans == True:
+                        playerNo = 3 - playerNo
+                        break
+                except:
+                    continue
+            
         return winner
     
     def togglePlayer(self):

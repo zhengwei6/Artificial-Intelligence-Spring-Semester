@@ -32,7 +32,9 @@ class Node(object):
         newNodeList = []
         newStateList = self.state.getAllPossibleStates()
         for newState in newStateList:
-            newNode = Node(parent=self)
+            newNode = Node()
+            newNode.parent = self
+            newNode.children = []
             newNode.state = newState
             self.children.append(newNode)
         

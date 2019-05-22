@@ -134,7 +134,7 @@ class Board(object):
         """
         allInRegion = self.checkInRegion()
 
-        if self.whiteMovesNum == 200 or self.blackMovesNum == 200 or allInRegion != -1:
+        if self.whiteMovesNum > 200 or self.blackMovesNum > 200 or allInRegion != -1:
             blackNum = 0
             whiteNum = 0
             for i in range(8):

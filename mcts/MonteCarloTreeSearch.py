@@ -3,98 +3,99 @@ from Tree  import Tree
 from Node  import Node
 import math
 import copy
+import random
 
 COMPUTATION_BUDGET = 30
 
 def uctValue(totalVisit, nodeWinScore, nodeVisit):
     if nodeVisit == 0:
         return float('inf')
-    return (nodeWinScore / float(nodeVisit)) + 1.41 * math.sqrt(math.log(totalVisit) /  float(nodeVisit) )
+    if totalVisit == 0:
+        return (nodeWinScore / nodeVisit)
+    else:
+        return (nodeWinScore / nodeVisit) + 1.41 * math.sqrt(math.log(totalVisit) /  nodeVisit )
 
 def findBestNodeWithUCT(node):
-    parentVisit = node.getState().getVisitCount()
+    parentVisit = node.state.visitCount
     valueList   = []
-    for childNode in node.getChild():
+    maxValue    = float('-inf')
+    returnNode  = None
+    for childNode in node.children:
+        #print(len(childNode.children))
         value = uctValue(parentVisit, childNode.getState().getWinScore(), childNode.getState().getVisitCount())
+        if value > maxValue:
+            returnNode = childNode
+            maxValue = value
+    #print(123)
+    return returnNode
+            
+    
 
 def selectPromisingNode(rootNode):
     """
     找到 Expand node
     """
     node = rootNode
-    while len(node.getChild()) != 0:
+    while len(node.children) != 0:
+        #print(len(node.children))
         node = findBestNodeWithUCT(node)
     return node
 
-def backPropogation(nodeToExplore, playerNo):
+def backPropogation(nodeToExplore,playoutResult ,playerNo):
     """
     從 Simulation node (注意不是 Expand node! ) 開始往上 backPropogation 
     """
     tempNode = nodeToExplore
     while tempNode != None:
         tempNode.getState().incrementVisit()
-        if tempNode.getState().getPlayerNo() == playerNo:
-            tempNode.getState().addScore(10) #WINSCORE
+        if playoutResult == playerNo:
+            tempNode.getState().addScore(1) #WINSCORE
         tempNode = tempNode.getParent()
     
-def simulateRandomPlayout(node,opponent):
-    """
-    從Simulation node 開始 把遊戲 run 到最後   
-    """
-    tempNode    = copy.copy(node)
-    tempState   = tempNode.getState()
-    boardStatus = tempState.getBoard().checkStatus()
-    if boardStatus == opponent:
-        tempNode.getParent().getState().setWinScore(float('-inf'))
-        return boardStatus
-    
-    while boardStatus == Board.IN_PROGRESS:
-        tempState.togglePlayer()
-        tempState.randomPlay()
-        boardStatus = tempState.getBoard().checkStatus()
-    return  boardStatus
-    
-def expandNode(node):
-    """
-    把這個node 有可能的 下個 state 都產生出來並且加到 child 中
-    """
-    possibleStates = node.getState().getAllPossibleStates() 
-    for subState in possibleStates:
-        newNode = Node(parent=node , state=subState )
-        newNode.getState().setPlayerNo(node.getState().getOpponent())
-        node.getChild().append(newNode)
-    return node
-
-def findNextMove(board, playerNo):
-    opponent = 3 - playerNo
+def findNextMove(boardValues, playerNo):
     tree = Tree()
     rootNode = tree.getRoot()
-    rootNode.getState().setBoard(board)
+    rootNode.state.board.boardValues = boardValues
     rootNode.getState().setPlayerNo(playerNo)
     
-    # Run as much as possible under the computation budget
-    for i in range(COMPUTATION_BUDGET):
+    for i in range(1000):
+        # Run as much as possible under the computation budget
         # Phase 1 - Selection
         promisingNode = selectPromisingNode(rootNode)
-        
+        #print(promisingNode.state.board.boardValues)
         # Phase 2 - Expansion
         if promisingNode.getState().getBoard().checkStatus() == Board.IN_PROGRESS:
-            promisingNode = expandNode(promisingNode)
-        
+            promisingNode.getRandomChildNode()
         # Phase 3 - Simulation
         nodeToExplore = promisingNode
         if len(promisingNode.getChild()) > 0:
-            nodeToExplore = promisingNode.getRandomChildNode()
-        playoutResult = simulateRandomPlayout(nodeToExplore)
-        
+            childIndex = random.randint( 0 , len(promisingNode.children)-1)
+            nodeToExplore = promisingNode.children[childIndex]
+        playoutResult = nodeToExplore.state.randomPlay()
+
         #Phase 4 - Update
-        backPropogation(nodeToExplore, playoutResult)
-
-    winnerNode = rootNode.getChildWithMaxScore()
-    return winnerNode.getState().getBoard()
-
+        backPropogation(nodeToExplore, playoutResult, playerNo)
+        print(rootNode.state.winScore,rootNode.state.visitCount)
+    maxx = -1
+    temp = None
+    for childNode in rootNode.children:
+        if childNode.state.winScore > maxx:
+            temp = childNode
+            maxx = childNode.state.winScore
+        print(childNode.state.playerNo,childNode.state.winScore,childNode.state.visitCount)
+    print(maxx)
+    print(temp.state.board.boardValues)
 def main():
-    
+    playerNo    = 1 #黑子
+    boardValues = [ [1,0,0,0,0,0,0,0],
+                    [0,1,0,0,0,0,0,2],
+                    [1,0,1,0,0,0,2,0],
+                    [0,1,0,0,0,2,0,2],
+                    [1,0,1,0,0,0,2,0],
+                    [0,1,0,0,0,2,0,2],
+                    [1,0,0,0,0,0,2,0],
+                    [0,0,0,0,0,0,0,2]]
+    findNextMove(boardValues,playerNo)
 if __name__ == "__main__":
     main()
 
