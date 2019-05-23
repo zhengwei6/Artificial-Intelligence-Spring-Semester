@@ -11,7 +11,7 @@ class State(object):
         self.playerNo   = playerNo
         self.visitCount = visitCount
         self.winScore   = winScore  #github UCT 算法 (nodeWinScore / (double) nodeVisit) + 1.41 * Math.sqrt(Math.log(totalVisit) / (double) nodeVisit)
-        
+        self.moveList   = []
     def getBoard(self):
         return self.board
     
@@ -48,6 +48,7 @@ class State(object):
                 newState.visitCount = 0
                 newState.winScore   = 0
                 newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
+                newState.moveList.extend([[index[0],index[1]],[row,col]])
                 newStateList.append(newState)
 
         for crsMove in self.AVAILABLE_CROSS_MOVES:
@@ -62,6 +63,7 @@ class State(object):
                 newState.visitCount = 0
                 newState.winScore   = 0
                 newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
+                newState.moveList.extend([[index[0],index[1]],[row,col]])
                 newStateList.append(newState)
         
         return newStateList
@@ -78,6 +80,7 @@ class State(object):
                     avaliableChessPos.append([row,col])
         
         newStateList   = []
+        newMove        = []
         for index in avaliableChessPos:
             newStateList.extend(self.posPossibleState(index,self.playerNo)) 
         return  newStateList
@@ -109,7 +112,7 @@ class State(object):
                 for col in range(8):
                     if boardValues[row][col] == playerNo:
                         avaliableChessPos.append([row,col])
-
+            delList = []
             for posElement in avaliableChessPos:
                 validMove = []
                 for movElement in self.AVAILABLE_ONE_MOVES :
@@ -127,14 +130,17 @@ class State(object):
                         validMove.append(movElement)
                 
                 if len(validMove) == 0:
-                    avaliableChessPos.remove(posElement)
+                    delList.append(avaliableChessPos.index(posElement))
                 else:
                     avaliableMove.append(validMove)
-                
+
+            for i in delList:
+                del avaliableChessPos[i]
+            
             if len(avaliableChessPos) == 0:
                 playerNo = 3 - playerNo
                 continue
-            
+
             round = 0
             while True:
                 try:

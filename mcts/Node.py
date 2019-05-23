@@ -5,7 +5,6 @@ class Node(object):
         self.parent = parent
         self.children = children
         self.state = State()
-    
     def getState(self):
         return self.state
     

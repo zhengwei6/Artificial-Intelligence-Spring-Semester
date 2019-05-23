@@ -21,12 +21,10 @@ def findBestNodeWithUCT(node):
     maxValue    = float('-inf')
     returnNode  = None
     for childNode in node.children:
-        #print(len(childNode.children))
         value = uctValue(parentVisit, childNode.getState().getWinScore(), childNode.getState().getVisitCount())
         if value > maxValue:
             returnNode = childNode
             maxValue = value
-    #print(123)
     return returnNode
             
     
@@ -37,7 +35,6 @@ def selectPromisingNode(rootNode):
     """
     node = rootNode
     while len(node.children) != 0:
-        #print(len(node.children))
         node = findBestNodeWithUCT(node)
     return node
 
@@ -58,7 +55,7 @@ def findNextMove(boardValues, playerNo):
     rootNode.state.board.boardValues = boardValues
     rootNode.getState().setPlayerNo(playerNo)
     
-    for i in range(1000):
+    for i in range(100):
         # Run as much as possible under the computation budget
         # Phase 1 - Selection
         promisingNode = selectPromisingNode(rootNode)
@@ -82,9 +79,10 @@ def findNextMove(boardValues, playerNo):
         if childNode.state.winScore > maxx:
             temp = childNode
             maxx = childNode.state.winScore
-        print(childNode.state.playerNo,childNode.state.winScore,childNode.state.visitCount)
+        #print(childNode.state.playerNo,childNode.state.winScore,childNode.state.visitCount)
+    
     print(maxx)
-    print(temp.state.board.boardValues)
+    print(temp.state.moveList)
 def main():
     playerNo    = 1 #黑子
     boardValues = [ [1,0,0,0,0,0,0,0],
