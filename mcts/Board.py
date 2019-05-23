@@ -1,4 +1,3 @@
-import numpy as np
 class Board(object):
     DEFAULT_BOARD_SIZE = 8
     IN_PROGRESS        = -1
@@ -7,7 +6,7 @@ class Board(object):
     AVAILABLE_ONE_MOVES    = [[-1,0] , [0,1], [1,0], [0,-1]]
     AVAILABLE_CROSS_MOVES  = [[-2,0] , [0,2], [2,0], [0,-2]]
 
-    def __init__(self,boardValues=[],blackMovesNum=0,whiteMovesNum=0):
+    def __init__(self):
         # Create the initialized state and initialized board
         # Example
         # boardValues = [[0,1,1,0,0,0,0,0],
@@ -18,9 +17,9 @@ class Board(object):
         #                [0,1,1,0,0,2,2,2],
         #                [0,1,1,0,0,2,2,2],
         #                [0,1,1,0,0,2,2,2]]
-        self.boardValues    = boardValues
-        self.blackMovesNum  = blackMovesNum
-        self.whiteMovesNum  = whiteMovesNum
+        self.boardValues    = []
+        self.blackMovesNum  = 0
+        self.whiteMovesNum  = 0
 
     def moveOneStep(self,playerNo,oneMove):
         """

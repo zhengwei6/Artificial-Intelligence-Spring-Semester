@@ -6,11 +6,11 @@ class State(object):
     AVAILABLE_ONE_MOVES    = [[-1,0] , [0,1], [1,0], [0,-1]]
     AVAILABLE_CROSS_MOVES  = [[-2,0] , [0,2], [2,0], [0,-2]]
     AVAILABLE_MOVES        = [[-1,0] , [0,1], [1,0], [0,-1],[-2,0] , [0,2], [2,0], [0,-2]]
-    def __init__(self, playerNo=0, visitCount=0, winScore=0):
+    def __init__(self):
         self.board      = Board()
-        self.playerNo   = playerNo
-        self.visitCount = visitCount
-        self.winScore   = winScore  #github UCT 算法 (nodeWinScore / (double) nodeVisit) + 1.41 * Math.sqrt(Math.log(totalVisit) / (double) nodeVisit)
+        self.playerNo   = 0
+        self.visitCount = 0
+        self.winScore   = 0   #github UCT 算法 (nodeWinScore / (double) nodeVisit) + 1.41 * Math.sqrt(Math.log(totalVisit) / (double) nodeVisit)
         self.moveList   = []
     def getBoard(self):
         return self.board
@@ -64,8 +64,9 @@ class State(object):
                 newState.winScore   = 0
                 newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
                 newState.moveList.extend([[index[0],index[1]],[row,col]])
+                if self.board.boardValues[imr][imc] == 3 - playerNo:
+                    newState.winScore   += 10
                 newStateList.append(newState)
-        
         return newStateList
 
     def getAllPossibleStates(self):
@@ -111,7 +112,16 @@ class State(object):
             for row in range(8):
                 for col in range(8):
                     if boardValues[row][col] == playerNo:
+                        if ( col - 2 >= 0 ) and ( boardValues[row][col-1] == 3 - playerNo ) and (boardValues[row][col-2] == 0):
+                            return playerNo
+                        elif ( col + 2 < 8 )  and ( boardValues[row][col+1] == 3 - playerNo ) and (boardValues[row][col+2] == 0):
+                            return playerNo
+                        elif ( row - 2 >= 0 ) and ( boardValues[row-1][col] == 3 - playerNo ) and (boardValues[row-2][col] == 0):
+                            return playerNo
+                        elif ( row + 2 < 8 ) and ( boardValues[row+1][col] == 3 - playerNo ) and (boardValues[row+2][col] == 0):
+                            return playerNo
                         avaliableChessPos.append([row,col])
+            
             delList = []
             for posElement in avaliableChessPos:
                 validMove = []

@@ -1,10 +1,10 @@
 from State import State
-class Node(object):
-    def __init__(self, parent=None, children=[]):
+class Node():
+    def __init__(self):
         # Create the initialized state and initialized node
-        self.parent = parent
-        self.children = children
-        self.state = State()
+        self.parent   = None
+        self.children = []
+        self.state    = State()
     def getState(self):
         return self.state
     
@@ -22,7 +22,7 @@ class Node(object):
 
     def setParent(self,parent):
         self.parent = parent
-
+   
     def getRandomChildNode(self):
         """
         @param
