@@ -50,7 +50,7 @@ class State(object):
                 newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
                 newState.moveList.extend([[index[0],index[1]],[row,col]])
                 newStateList.append(newState)
-
+                
         for crsMove in self.AVAILABLE_CROSS_MOVES:
             row = (index[0] + crsMove[0])
             col = (index[1] + crsMove[1])
@@ -103,8 +103,13 @@ class State(object):
         # 棋子能走的隨機選一個 
         while True:
             winner = board.checkStatus()
-            if winner != -1 :
+            if winner == 1 or winner == 2:
+                winner = 1
                 break
+            elif winner == 3 or winner == 4:
+                winner = 2
+                break
+                
             avaliableChessPos = []
             avaliableMove     = []
             boardValues       = board.boardValues
@@ -112,15 +117,27 @@ class State(object):
             for row in range(8):
                 for col in range(8):
                     if boardValues[row][col] == playerNo:
-                        if ( col - 2 >= 0 ) and ( boardValues[row][col-1] == 3 - playerNo ) and (boardValues[row][col-2] == 0):
+                        if ( col - 2 >= 0 )   and ( boardValues[row][col-1] == 3 - playerNo ) and (boardValues[row][col-2] == 0):
                             return playerNo
                         elif ( col + 2 < 8 )  and ( boardValues[row][col+1] == 3 - playerNo ) and (boardValues[row][col+2] == 0):
                             return playerNo
                         elif ( row - 2 >= 0 ) and ( boardValues[row-1][col] == 3 - playerNo ) and (boardValues[row-2][col] == 0):
                             return playerNo
-                        elif ( row + 2 < 8 ) and ( boardValues[row+1][col] == 3 - playerNo ) and (boardValues[row+2][col] == 0):
+                        elif ( row + 2 < 8 )  and ( boardValues[row+1][col] == 3 - playerNo ) and (boardValues[row+2][col] == 0):
                             return playerNo
                         avaliableChessPos.append([row,col])
+
+            if len(avaliableChessPos) == 0:
+                opponent = 3 - playerNo
+                for row in range(8):
+                    if opponent == 1:
+                        for col in range(6,8):
+                            if boardValues[row][col] == opponent:
+                                return opponent
+                    if opponent == 2:
+                        for col in range(0,2):
+                            if boardValues[row][col] == opponent:
+                                return opponent
             
             delList = []
             for posElement in avaliableChessPos:
@@ -148,9 +165,13 @@ class State(object):
                 del avaliableChessPos[i]
             
             if len(avaliableChessPos) == 0:
+                if playerNo == 1:
+                    board.blackMovesNum += 1
+                else:
+                    board.whiteMovesNum += 1
                 playerNo = 3 - playerNo
                 continue
-
+            
             round = 0
             while True:
                 try:
@@ -159,7 +180,7 @@ class State(object):
                 
                     position   = avaliableChessPos[randPos]
                     move       = avaliableMove[randPos][randMov]
-                
+                    
                     row      = position[0] + move[0]
                     col      = position[1] + move[1]
                     ans      = False

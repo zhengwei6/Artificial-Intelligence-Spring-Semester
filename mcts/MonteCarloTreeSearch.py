@@ -81,28 +81,19 @@ def findNextMove(boardValues, playerNo):
             maxx = childNode.state.winScore
         #print(childNode.state.playerNo,childNode.state.winScore,childNode.state.visitCount)
     #print(maxx)
-    #print(temp.state.moveList)
+    print(temp.state.moveList)
     return temp.state.moveList
 
 def main():
     playerNo    = 1 #黑子
-    boardValues = [[1, 0, 0, 0, 0, 0, 0, 0],
-                   [0, 0, 1, 0, 0, 0, 2, 0],
-                   [1, 0, 1, 0, 0, 0, 2, 0],
-                   [0, 1, 0, 0, 0, 2, 0, 2],
-                   [1, 0, 1, 0, 0, 0, 2, 0],
-                   [0, 1, 0, 0, 0, 2, 0, 2],
-                   [1, 0, 0, 0, 0, 0, 2, 0],
-                   [0, 0, 0, 0, 0, 0, 0, 2]]
-    findNextMove(boardValues,playerNo)
-    boardValues = [[1, 0, 0, 0, 0, 0, 0, 0],
-                   [0, 0, 1, 0, 0, 2, 0, 0],
-                   [1, 0, 1, 0, 0, 0, 2, 0],
-                   [0, 1, 0, 0, 0, 2, 0, 2],
-                   [1, 0, 1, 0, 0, 0, 2, 0],
-                   [0, 1, 0, 0, 0, 2, 0, 2],
-                   [1, 0, 0, 0, 0, 0, 2, 0],
-                   [0, 0, 0, 0, 0, 0, 0, 2]]
+    boardValues = [[0, 0, 0, 0, 0, 0, 0, 2],
+                   [0, 0, 1, 0, 0, 0, 0, 0],
+                   [0, 0, 1, 0, 0, 0, 0, 0],
+                   [0, 1, 0, 0, 0, 0, 0, 0],
+                   [1, 0, 1, 0, 0, 0, 0, 0],
+                   [0, 1, 0, 0, 0, 0, 0, 0],
+                   [1, 0, 0, 0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0, 0, 0, 0]]
     findNextMove(boardValues,playerNo)
 if __name__ == "__main__":
     main()

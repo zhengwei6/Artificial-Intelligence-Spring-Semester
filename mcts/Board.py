@@ -151,8 +151,8 @@ class Board(object):
             else:
                 return self.DRAW
         
-        # return allInRegion 能夠得到更多資訊!
-        return self.IN_PROGRESS
+        return allInRegion
+
     
     
 
