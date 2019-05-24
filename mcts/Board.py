@@ -91,7 +91,7 @@ class Board(object):
     def checkInRegion(self):
         """
         @return 
-        如果黑棋全部的棋都在目標區域內回傳 1 如果白棋全部都在目標區域內回傳 2 都沒有則回傳 -1
+        黑棋全部都在區域內且白棋都被吃光 1 ， 黑棋全部都在區域內且白棋還有  2 ， 白棋都在區域內且黑棋被吃光 3 ，白棋都在區域內且黑棋還有 4 ， 黑或白棋都沒全到區域內 -1 
         如果黑棋全部都被吃掉，白棋會繼續玩到直到全部白子皆到達目標區域or完成200回合才會結束遊戲 (問助教的)
         """
         # check for black
@@ -117,10 +117,14 @@ class Board(object):
             if whitewin == -1:
                 break
         
-        if blackwin == 1:
-            return 1
-        if whitewin == 1:
+        if blackwin == 1 and whitewin == 0:    #黑棋全部都在區域內且白棋都被吃光 
+            return 1 
+        elif blackwin == 1 and whitewin == -1: #黑棋全部都在區域內且白棋還有
             return 2
+        elif whitewin == 1 and blackwin == 0:  #白棋都在區域內且黑棋被吃光
+            return 3
+        elif whitewin == 1 and blackwin == -1: #白棋都在區域內且黑棋還有
+            return 4
         return -1
                     
     def checkStatus(self):
@@ -130,7 +134,7 @@ class Board(object):
         """
         allInRegion = self.checkInRegion()
 
-        if (self.whiteMovesNum == 200 and self.blackMovesNum == 200) or allInRegion != -1:
+        if (self.whiteMovesNum >= 200 and self.blackMovesNum >= 200) or allInRegion != -1:
             blackNum = 0
             whiteNum = 0
             for i in range(8):
@@ -145,8 +149,9 @@ class Board(object):
                 return 2
             else:
                 return self.DRAW
-       
-        return self.IN_PROGRESS 
+        
+        # return allInRegion 能夠得到更多資訊!
+        return self.IN_PROGRESS
     
     
 
