@@ -121,8 +121,6 @@ class Board(object):
             if whitewin == -1:
                 break
         
-        if blackwin == 1 and whitewin == 1:
-            print("[Error] : Two all in region?")
         if blackwin == 1:
             return 1
         if whitewin == 1:
