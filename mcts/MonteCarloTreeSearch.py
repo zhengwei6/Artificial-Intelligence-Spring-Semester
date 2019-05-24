@@ -45,22 +45,46 @@ def backPropogation(nodeToExplore,playoutResult ,playerNo):
     tempNode = nodeToExplore
     while tempNode != None:
         tempNode.getState().incrementVisit()
-        if playoutResult == playerNo:
+        if playoutResult == playerNo :
             tempNode.getState().addScore(1) #WINSCORE
         tempNode = tempNode.getParent()
+
+def checkChess(boardValues, playerNo):
+    have = 0
+    for row in range(8):
+        for col in range(8):
+            if boardValues[row][col] == playerNo:
+                have = 1
+            if have == 1:
+                break
+        if have == 1:
+            break
+    if have == 1:
+        return True
+    return False
+
+def findNextMove(boardValues, playerNo,step):
+    if not checkChess(boardValues, playerNo):
+        return [[0,0],[1,1]]
     
-def findNextMove(boardValues, playerNo):
     tree = Tree()
     rootNode = tree.getRoot()
     rootNode.state.board.boardValues = boardValues
     rootNode.getState().setPlayerNo(playerNo)
+    if playerNo == 1:
+        rootNode.state.board.blackMovesNum = step
+        rootNode.state.board.whiteMovesNum = step
+    else:
+        rootNode.state.board.blackMovesNum = step + 1
+        rootNode.state.board.whiteMovesNum = step
+    
     for i in range(400):
         # Run as much as possible under the computation budget
         # Phase 1 - Selection
         promisingNode = selectPromisingNode(rootNode)
         #print(promisingNode.state.board.boardValues)
         # Phase 2 - Expansion
-        if promisingNode.getState().getBoard().checkStatus() == Board.IN_PROGRESS:
+        if promisingNode.getState().getBoard().checkStatus(200) == Board.IN_PROGRESS:
             promisingNode.getRandomChildNode()
         # Phase 3 - Simulation
         nodeToExplore = promisingNode
@@ -68,33 +92,33 @@ def findNextMove(boardValues, playerNo):
             childIndex = random.randint( 0 , len(promisingNode.children)-1)
             nodeToExplore = promisingNode.children[childIndex]
         playoutResult = nodeToExplore.state.randomPlay()
-
+        
         #Phase 4 - Update
         backPropogation(nodeToExplore, playoutResult, playerNo)
-        print(rootNode.state.winScore,rootNode.state.visitCount)
+        #print(rootNode.state.winScore,rootNode.state.visitCount)
     maxx = -1
     temp = None
     for childNode in rootNode.children:
-        
-        if childNode.state.winScore > maxx:
+        if childNode.state.winScore/ childNode.state.visitCount > maxx:
             temp = childNode
-            maxx = childNode.state.winScore
-        #print(childNode.state.playerNo,childNode.state.winScore,childNode.state.visitCount)
+            maxx = childNode.state.winScore / childNode.state.visitCount
+        print(childNode.state.playerNo,childNode.state.winScore,childNode.state.visitCount,childNode.state.moveList)
     #print(maxx)
     print(temp.state.moveList)
     return temp.state.moveList
 
 def main():
-    playerNo    = 1 #黑子
-    boardValues = [[0, 0, 0, 0, 0, 0, 0, 2],
-                   [0, 0, 1, 0, 0, 0, 0, 0],
-                   [0, 0, 1, 0, 0, 0, 0, 0],
-                   [0, 1, 0, 0, 0, 0, 0, 0],
-                   [1, 0, 1, 0, 0, 0, 0, 0],
-                   [0, 1, 0, 0, 0, 0, 0, 0],
+    playerNo    = 1
+    step        = 180
+    boardValues = [[1, 0, 0, 0, 0, 2, 0, 0],
+                   [1, 0, 0, 2, 0, 0, 0, 0],
+                   [1, 0, 0, 2, 0, 0, 0, 0],
+                   [1, 0, 2, 0, 0, 0, 0, 0],
+                   [1, 0, 0, 2, 0, 2, 0, 0],
                    [1, 0, 0, 0, 0, 0, 0, 0],
-                   [0, 0, 0, 0, 0, 0, 0, 0]]
-    findNextMove(boardValues,playerNo)
+                   [1, 0, 0, 0, 0, 2, 0, 0],
+                   [1, 0, 2, 2, 0, 0, 0, 0]]
+    findNextMove(boardValues,playerNo,step)
 if __name__ == "__main__":
     main()
 

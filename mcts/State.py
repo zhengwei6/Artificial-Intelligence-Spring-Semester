@@ -47,6 +47,13 @@ class State(object):
                 newState.playerNo   = 3 - playerNo
                 newState.visitCount = 0
                 newState.winScore   = 0
+                if playerNo == 1:
+                    if (index[1] != 6 and index[1]!=7) and (col == 6 or col == 7):
+                        newState.winScore   += 30
+                elif playerNo == 2:
+                    if (index[1] != 0 and index[1]!=1) and (col == 0 or col == 1):
+                        newState.winScore   += 30
+                
                 newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
                 newState.moveList.extend([[index[0],index[1]],[row,col]])
                 newStateList.append(newState)
@@ -62,10 +69,17 @@ class State(object):
                 newState.playerNo   = 3 - playerNo
                 newState.visitCount = 0
                 newState.winScore   = 0
-                newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
-                newState.moveList.extend([[index[0],index[1]],[row,col]])
+                if playerNo == 1:
+                    if (index[1] != 6 and index[1]!=7) and (col == 6 or col == 7):
+                        newState.winScore   += 30
+                elif playerNo == 2:
+                    if (index[1] != 0 and index[1]!=1) and (col == 0 or col == 1):
+                        newState.winScore   += 30
+                
                 if self.board.boardValues[imr][imc] == 3 - playerNo:
                     newState.winScore   += 10
+                newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
+                newState.moveList.extend([[index[0],index[1]],[row,col]])
                 newStateList.append(newState)
         return newStateList
 
@@ -98,22 +112,23 @@ class State(object):
         """
         playerNo    = self.playerNo
         board       = copy.deepcopy(self.board)
+        step        = board.whiteMovesNum
+        addstep     = 50
+        if step > 150:
+            addstep = 200 - step
+
         winner      = -1
         # 先選擇一個 playerNo 的棋子
         # 棋子能走的隨機選一個 
         while True:
-            winner = board.checkStatus()
-            if winner == 1 or winner == 2:
-                winner = 1
-                break
-            elif winner == 3 or winner == 4:
-                winner = 2
-                break
-                
+            winner = board.checkStatus(step+50)
+            if winner != -1:
+                return
             avaliableChessPos = []
             avaliableMove     = []
+            avaliableProp     = []
             boardValues       = board.boardValues
-
+            
             for row in range(8):
                 for col in range(8):
                     if boardValues[row][col] == playerNo:
@@ -142,10 +157,17 @@ class State(object):
             delList = []
             for posElement in avaliableChessPos:
                 validMove = []
+                validProp = []
                 for movElement in self.AVAILABLE_ONE_MOVES :
                     row = posElement[0] + movElement[0]
                     col = posElement[1] + movElement[1]
                     if ( row >= 0) and (row < 8) and ( col >= 0) and (col < 8) and (boardValues[row][col] == 0):
+                        if movElement[1] > 0 and playerNo == 1:
+                            validProp.append(50)
+                        elif movElement[1] < 0 and playerNo == 2:
+                            validProp.append(50)
+                        else:
+                            validProp.append(10)
                         validMove.append(movElement)
                 
                 for movElement in self.AVAILABLE_CROSS_MOVES:
@@ -154,12 +176,20 @@ class State(object):
                     mir = posElement[0] + int(movElement[0]/2)
                     mic = posElement[1] + int(movElement[1]/2)
                     if ( row >= 0) and (row < 8) and ( col >= 0) and (col < 8)  and (boardValues[row][col] == 0) and (boardValues[mir][mic] != 0):
+                        if movElement[1] > 0 and playerNo == 1:
+                            validProp.append(50)
+                        elif movElement[1] < 0 and playerNo == 2:
+                            validProp.append(50)
+                        else:
+                            validProp.append(10)
                         validMove.append(movElement)
                 
                 if len(validMove) == 0:
                     delList.append(avaliableChessPos.index(posElement))
                 else:
+                    avaliableProp.append(validProp)
                     avaliableMove.append(validMove)
+
 
             for i in delList:
                 del avaliableChessPos[i]
@@ -176,16 +206,15 @@ class State(object):
             while True:
                 try:
                     randPos    = random.randint( 0 , len(avaliableChessPos)-1)
-                    randMov    = random.randint( 0 , len(avaliableMove[randPos])-1)
-                
+                    randMov    = random.choices(list(range(len(avaliableMove[randPos])) ) ,avaliableProp[randPos])
                     position   = avaliableChessPos[randPos]
-                    move       = avaliableMove[randPos][randMov]
+                    move       = avaliableMove[randPos][randMov[0]]
                     
                     row      = position[0] + move[0]
                     col      = position[1] + move[1]
                     ans      = False
                     if row < 8 and row >= 0 and col < 8 and col >= 0 and board.boardValues[row][col] == 0 :
-                        ans  = board.performMove(playerNo,[ [position[0],position[1]] , [row, col ] ])
+                        ans  = board.performMove(playerNo,[ [position[0],position[1]] , [row, col] ])
                     round = round + 1
                     if round > 10:
                         playerNo = 3 - playerNo
@@ -193,7 +222,9 @@ class State(object):
                     if ans == True:
                         playerNo = 3 - playerNo
                         break
-                except:
+                except Exception as e:
+                    print(e)
+                    exit(1)
                     continue
             
         return winner

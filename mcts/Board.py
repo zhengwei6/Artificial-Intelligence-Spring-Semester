@@ -125,16 +125,20 @@ class Board(object):
             return 3
         elif whitewin == 1 and blackwin == -1: #白棋都在區域內且黑棋還有
             return 4
+        elif whitewin == 0 and blackwin == 0:  #白棋全部沒在區域且黑棋也是
+            return 5
         return -1
                     
-    def checkStatus(self):
+    def checkStatus(self,step):
         """
         @param
         @return  如果是黑子獲勝 回傳 1 如果是白子獲勝 回傳 2 如果還在進行中 回傳 IN_PROGRESS (-1) 平手 DRAW (0)
         """
         allInRegion = self.checkInRegion()
 
-        if (self.whiteMovesNum >= 200 and self.blackMovesNum >= 200) or (allInRegion != -1 and allInRegion != 2 and allInRegion != 4):
+        if (self.whiteMovesNum >= step and self.blackMovesNum >= step) or (allInRegion != -1 and allInRegion != 2 and allInRegion != 4):
+            if allInRegion == 5:
+                return self.DRAW
             blackNum = 0
             whiteNum = 0
             for i in range(8):
@@ -150,8 +154,9 @@ class Board(object):
                 return 2
             else:
                 return self.DRAW
-        
-        return allInRegion
+        return -1
+    
+
 
     
     
