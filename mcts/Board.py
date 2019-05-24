@@ -80,10 +80,6 @@ class Board(object):
         else:
             # 還原
             self.boardValues = tempBoardValues
-            print(self.boardValues)
-            print(moveList)
-            print("[Error] : Fail to move one step!")
-            exit(1)
             return False
 
     def getBoardValues(self):
