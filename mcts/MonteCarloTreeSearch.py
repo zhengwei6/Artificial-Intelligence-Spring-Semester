@@ -28,7 +28,6 @@ def findBestNodeWithUCT(node):
     return returnNode
             
     
-
 def selectPromisingNode(rootNode):
     """
     找到 Expand node
@@ -45,8 +44,10 @@ def backPropogation(nodeToExplore,playoutResult ,playerNo):
     tempNode = nodeToExplore
     while tempNode != None:
         tempNode.getState().incrementVisit()
-        if playoutResult == playerNo :
-            tempNode.getState().addScore(1) #WINSCORE
+        if playerNo == 1:
+            tempNode.state.winScore += playoutResult
+        else:
+            tempNode.state.winScore -= playoutResult
         tempNode = tempNode.getParent()
 
 def checkChess(boardValues, playerNo):
@@ -78,7 +79,7 @@ def findNextMove(boardValues, playerNo,step):
         rootNode.state.board.blackMovesNum = step + 1
         rootNode.state.board.whiteMovesNum = step
     
-    for i in range(400):
+    for i in range(5000):
         # Run as much as possible under the computation budget
         # Phase 1 - Selection
         promisingNode = selectPromisingNode(rootNode)
@@ -91,12 +92,13 @@ def findNextMove(boardValues, playerNo,step):
         if len(promisingNode.getChild()) > 0:
             childIndex = random.randint( 0 , len(promisingNode.children)-1)
             nodeToExplore = promisingNode.children[childIndex]
-        playoutResult = nodeToExplore.state.randomPlay()
+        playoutResult = nodeToExplore.state.evaluatePlay()
         
         #Phase 4 - Update
         backPropogation(nodeToExplore, playoutResult, playerNo)
         #print(rootNode.state.winScore,rootNode.state.visitCount)
-    maxx = -1
+    
+    maxx = float('-inf')
     temp = None
     for childNode in rootNode.children:
         if childNode.state.winScore/ childNode.state.visitCount > maxx:
@@ -108,16 +110,16 @@ def findNextMove(boardValues, playerNo,step):
     return temp.state.moveList
 
 def main():
-    playerNo    = 1
+    playerNo    = 2
     step        = 180
-    boardValues = [[1, 0, 0, 0, 0, 2, 0, 0],
-                   [1, 0, 0, 2, 0, 0, 0, 0],
-                   [1, 0, 0, 2, 0, 0, 0, 0],
-                   [1, 0, 2, 0, 0, 0, 0, 0],
-                   [1, 0, 0, 2, 0, 2, 0, 0],
-                   [1, 0, 0, 0, 0, 0, 0, 0],
-                   [1, 0, 0, 0, 0, 2, 0, 0],
-                   [1, 0, 2, 2, 0, 0, 0, 0]]
+    boardValues = [ [0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0],
+                    [0,0,0,1,2,0,0,0],
+                    [0,0,1,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0],
+                    [0,0,1,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0]]
     findNextMove(boardValues,playerNo,step)
 if __name__ == "__main__":
     main()

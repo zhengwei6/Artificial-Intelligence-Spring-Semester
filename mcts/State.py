@@ -47,17 +47,11 @@ class State(object):
                 newState.playerNo   = 3 - playerNo
                 newState.visitCount = 0
                 newState.winScore   = 0
-                if playerNo == 1:
-                    if (index[1] != 6 and index[1]!=7) and (col == 6 or col == 7):
-                        newState.winScore   += 30
-                elif playerNo == 2:
-                    if (index[1] != 0 and index[1]!=1) and (col == 0 or col == 1):
-                        newState.winScore   += 30
-                
                 newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
                 newState.moveList.extend([[index[0],index[1]],[row,col]])
                 newStateList.append(newState)
-                
+        crossQueue = []
+
         for crsMove in self.AVAILABLE_CROSS_MOVES:
             row = (index[0] + crsMove[0])
             col = (index[1] + crsMove[1])
@@ -69,18 +63,30 @@ class State(object):
                 newState.playerNo   = 3 - playerNo
                 newState.visitCount = 0
                 newState.winScore   = 0
-                if playerNo == 1:
-                    if (index[1] != 6 and index[1]!=7) and (col == 6 or col == 7):
-                        newState.winScore   += 30
-                elif playerNo == 2:
-                    if (index[1] != 0 and index[1]!=1) and (col == 0 or col == 1):
-                        newState.winScore   += 30
-                
-                if self.board.boardValues[imr][imc] == 3 - playerNo:
-                    newState.winScore   += 10
                 newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
                 newState.moveList.extend([[index[0],index[1]],[row,col]])
                 newStateList.append(newState)
+                crossQueue.append(newState)
+        
+        roun = 0
+        while len(crossQueue) != 0:
+            roun = roun + 1
+            if roun > 10:
+                break
+            tempState = crossQueue.pop()
+            for crsMove in self.AVAILABLE_CROSS_MOVES:
+                row = tempState.moveList[-1][0] + crsMove[0]
+                col = tempState.moveList[-1][1] + crsMove[1]
+                imr = tempState.moveList[-1][0] + int(crsMove[0]/2)
+                imc = tempState.moveList[-1][1] + int(crsMove[1]/2)                
+                if row < 8 and row >= 0 and col < 8 and col >= 0 and tempState.board.boardValues[row][col] == 0 and tempState.board.boardValues[imr][imc] != 0:
+                    newState       =  copy.deepcopy(tempState)
+                    newState.board.performMove(playerNo,[[tempState.moveList[-1][0],tempState.moveList[-1][1]],[row,col]])
+                    newState.moveList.append([row,col])
+                    newStateList.append(newState)
+                    crossQueue.append(newState)
+        
+        random.shuffle(newStateList)
         return newStateList
 
     def getAllPossibleStates(self):
@@ -106,128 +112,28 @@ class State(object):
     def addScore(self,score):
         self.winScore += score
     
-    def randomPlay(self):
+    def evaluatePlay(self):
         """
-        目前這個 object 根據 self.playerNo 去隨機玩遊戲
+        evaluate 這個 state
+        黑的專門 +
+        白的專門 -
         """
+        playerscore   = 0
+        playerChessNum   = 0
+        opponentChessNum = 0
         playerNo    = self.playerNo
-        board       = copy.deepcopy(self.board)
-        step        = board.whiteMovesNum
-        addstep     = 50
-        if step > 150:
-            addstep = 200 - step
-
-        winner      = -1
-        # 先選擇一個 playerNo 的棋子
-        # 棋子能走的隨機選一個 
-        while True:
-            winner = board.checkStatus(step+50)
-            if winner != -1:
-                return
-            avaliableChessPos = []
-            avaliableMove     = []
-            avaliableProp     = []
-            boardValues       = board.boardValues
-            
-            for row in range(8):
-                for col in range(8):
-                    if boardValues[row][col] == playerNo:
-                        if ( col - 2 >= 0 )   and ( boardValues[row][col-1] == 3 - playerNo ) and (boardValues[row][col-2] == 0):
-                            return playerNo
-                        elif ( col + 2 < 8 )  and ( boardValues[row][col+1] == 3 - playerNo ) and (boardValues[row][col+2] == 0):
-                            return playerNo
-                        elif ( row - 2 >= 0 ) and ( boardValues[row-1][col] == 3 - playerNo ) and (boardValues[row-2][col] == 0):
-                            return playerNo
-                        elif ( row + 2 < 8 )  and ( boardValues[row+1][col] == 3 - playerNo ) and (boardValues[row+2][col] == 0):
-                            return playerNo
-                        avaliableChessPos.append([row,col])
-
-            if len(avaliableChessPos) == 0:
-                opponent = 3 - playerNo
-                for row in range(8):
-                    if opponent == 1:
-                        for col in range(6,8):
-                            if boardValues[row][col] == opponent:
-                                return opponent
-                    if opponent == 2:
-                        for col in range(0,2):
-                            if boardValues[row][col] == opponent:
-                                return opponent
-            
-            delList = []
-            for posElement in avaliableChessPos:
-                validMove = []
-                validProp = []
-                for movElement in self.AVAILABLE_ONE_MOVES :
-                    row = posElement[0] + movElement[0]
-                    col = posElement[1] + movElement[1]
-                    if ( row >= 0) and (row < 8) and ( col >= 0) and (col < 8) and (boardValues[row][col] == 0):
-                        if movElement[1] > 0 and playerNo == 1:
-                            validProp.append(50)
-                        elif movElement[1] < 0 and playerNo == 2:
-                            validProp.append(50)
-                        else:
-                            validProp.append(10)
-                        validMove.append(movElement)
-                
-                for movElement in self.AVAILABLE_CROSS_MOVES:
-                    row = posElement[0] + movElement[0]
-                    col = posElement[1] + movElement[1]
-                    mir = posElement[0] + int(movElement[0]/2)
-                    mic = posElement[1] + int(movElement[1]/2)
-                    if ( row >= 0) and (row < 8) and ( col >= 0) and (col < 8)  and (boardValues[row][col] == 0) and (boardValues[mir][mic] != 0):
-                        if movElement[1] > 0 and playerNo == 1:
-                            validProp.append(50)
-                        elif movElement[1] < 0 and playerNo == 2:
-                            validProp.append(50)
-                        else:
-                            validProp.append(10)
-                        validMove.append(movElement)
-                
-                if len(validMove) == 0:
-                    delList.append(avaliableChessPos.index(posElement))
-                else:
-                    avaliableProp.append(validProp)
-                    avaliableMove.append(validMove)
-
-
-            for i in delList:
-                del avaliableChessPos[i]
-            
-            if len(avaliableChessPos) == 0:
-                if playerNo == 1:
-                    board.blackMovesNum += 1
-                else:
-                    board.whiteMovesNum += 1
-                playerNo = 3 - playerNo
-                continue
-            
-            round = 0
-            while True:
-                try:
-                    randPos    = random.randint( 0 , len(avaliableChessPos)-1)
-                    randMov    = random.choices(list(range(len(avaliableMove[randPos])) ) ,avaliableProp[randPos])
-                    position   = avaliableChessPos[randPos]
-                    move       = avaliableMove[randPos][randMov[0]]
-                    
-                    row      = position[0] + move[0]
-                    col      = position[1] + move[1]
-                    ans      = False
-                    if row < 8 and row >= 0 and col < 8 and col >= 0 and board.boardValues[row][col] == 0 :
-                        ans  = board.performMove(playerNo,[ [position[0],position[1]] , [row, col] ])
-                    round = round + 1
-                    if round > 10:
-                        playerNo = 3 - playerNo
-                        break
-                    if ans == True:
-                        playerNo = 3 - playerNo
-                        break
-                except Exception as e:
-                    print(e)
-                    exit(1)
-                    continue
-            
-        return winner
+        boardValues = self.board.boardValues
+        for row in range(8):
+            for col in range(8):
+                if boardValues[row][col] == 1:
+                    playerscore += 10
+                if  boardValues[row][col] == 2:
+                    playerscore -= 10
+                if ( col == 6 or col == 7 ) and boardValues[row][col] == 1:
+                    playerscore += 5
+                if ( col == 0 or col == 1 ) and boardValues[row][col] == 2:
+                    playerscore -= 5
+        return  playerscore
     
     def togglePlayer(self):
         self.playerNo = 3 - self.playerNo
