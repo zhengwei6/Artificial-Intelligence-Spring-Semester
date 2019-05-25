@@ -47,8 +47,10 @@ def backPropogation(nodeToExplore,playoutResult ,playerNo):
     tempNode = nodeToExplore
     while tempNode != None:
         tempNode.getState().incrementVisit()
-        if playoutResult == playerNo :
-            tempNode.getState().addScore(1) #WINSCORE
+        if playerNo == 1:
+            tempNode.state.winScore += playoutResult
+        else:
+            tempNode.state.winScore -= playoutResult
         tempNode = tempNode.getParent()
 
 def checkChess(boardValues, playerNo):
@@ -80,7 +82,7 @@ def findNextMove(boardValues, playerNo,step):
         rootNode.state.board.blackMovesNum = step + 1
         rootNode.state.board.whiteMovesNum = step
     
-    for i in range(400):
+    for i in range(3000):
         # Run as much as possible under the computation budget
         # Phase 1 - Selection
         promisingNode = selectPromisingNode(rootNode)
@@ -93,12 +95,12 @@ def findNextMove(boardValues, playerNo,step):
         if len(promisingNode.getChild()) > 0:
             childIndex = random.randint( 0 , len(promisingNode.children)-1)
             nodeToExplore = promisingNode.children[childIndex]
-        playoutResult = nodeToExplore.state.randomPlay()
+        playoutResult = nodeToExplore.state.evaluatePlay()
         
         #Phase 4 - Update
         backPropogation(nodeToExplore, playoutResult, playerNo)
         #print(rootNode.state.winScore,rootNode.state.visitCount)
-    maxx = -1
+    maxx = float('-inf')
     temp = None
     for childNode in rootNode.children:
         if childNode.state.winScore/ childNode.state.visitCount > maxx:
@@ -311,17 +313,11 @@ class State(object):
                 newState.playerNo   = 3 - playerNo
                 newState.visitCount = 0
                 newState.winScore   = 0
-                if playerNo == 1:
-                    if (index[1] != 6 and index[1]!=7) and (col == 6 or col == 7):
-                        newState.winScore   += 30
-                elif playerNo == 2:
-                    if (index[1] != 0 and index[1]!=1) and (col == 0 or col == 1):
-                        newState.winScore   += 30
-                
                 newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
                 newState.moveList.extend([[index[0],index[1]],[row,col]])
                 newStateList.append(newState)
-                
+        crossQueue = []
+
         for crsMove in self.AVAILABLE_CROSS_MOVES:
             row = (index[0] + crsMove[0])
             col = (index[1] + crsMove[1])
@@ -333,18 +329,30 @@ class State(object):
                 newState.playerNo   = 3 - playerNo
                 newState.visitCount = 0
                 newState.winScore   = 0
-                if playerNo == 1:
-                    if (index[1] != 6 and index[1]!=7) and (col == 6 or col == 7):
-                        newState.winScore   += 30
-                elif playerNo == 2:
-                    if (index[1] != 0 and index[1]!=1) and (col == 0 or col == 1):
-                        newState.winScore   += 30
-                
-                if self.board.boardValues[imr][imc] == 3 - playerNo:
-                    newState.winScore   += 10
                 newState.board.performMove(playerNo,[[index[0],index[1]],[row,col]])
                 newState.moveList.extend([[index[0],index[1]],[row,col]])
                 newStateList.append(newState)
+                crossQueue.append(newState)
+        
+        roun = 0
+        while len(crossQueue) != 0:
+            roun = roun + 1
+            if roun > 10:
+                break
+            tempState = crossQueue.pop()
+            for crsMove in self.AVAILABLE_CROSS_MOVES:
+                row = tempState.moveList[-1][0] + crsMove[0]
+                col = tempState.moveList[-1][1] + crsMove[1]
+                imr = tempState.moveList[-1][0] + int(crsMove[0]/2)
+                imc = tempState.moveList[-1][1] + int(crsMove[1]/2)                
+                if row < 8 and row >= 0 and col < 8 and col >= 0 and tempState.board.boardValues[row][col] == 0 and tempState.board.boardValues[imr][imc] != 0:
+                    newState       =  copy.deepcopy(tempState)
+                    newState.board.performMove(playerNo,[[tempState.moveList[-1][0],tempState.moveList[-1][1]],[row,col]])
+                    newState.moveList.append([row,col])
+                    newStateList.append(newState)
+                    crossQueue.append(newState)
+        
+        random.shuffle(newStateList)
         return newStateList
 
     def getAllPossibleStates(self):
@@ -370,6 +378,29 @@ class State(object):
     def addScore(self,score):
         self.winScore += score
     
+    def evaluatePlay(self):
+        """
+        evaluate 這個 state
+        黑的專門 +
+        白的專門 -
+        """
+        playerscore   = 0
+        playerChessNum   = 0
+        opponentChessNum = 0
+        playerNo    = self.playerNo
+        boardValues = self.board.boardValues
+        for row in range(8):
+            for col in range(8):
+                if boardValues[row][col] == 1:
+                    playerscore += 10
+                if  boardValues[row][col] == 2:
+                    playerscore -= 10
+                if ( col == 6 or col == 7 ) and boardValues[row][col] == 1:
+                    playerscore += 5
+                if ( col == 0 or col == 1 ) and boardValues[row][col] == 2:
+                    playerscore -= 5
+        return  playerscore
+                
     def randomPlay(self):
         """
         目前這個 object 根據 self.playerNo 去隨機玩遊戲
@@ -536,6 +567,7 @@ class Node():
     def getChildWithMaxScore():
         #TODO return the child having ???
         pass
+    
 class Tree(object):
     def __init__(self):
         # Create the initialized state and initialized node
@@ -548,6 +580,7 @@ class Tree(object):
     def addChild(parent, child):
         #TODO add child for parent
         pass
+
 
 '''
     輪到此程式移動棋子
