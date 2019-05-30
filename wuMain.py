@@ -75,6 +75,13 @@ class Board(object):
         #print( moveList)
         tempBoardValues = self.boardValues
         legal = True
+        if len(moveList) == 0:
+            if playerNo == 1:
+                self.blackMovesNum += 1
+            else:
+                self.whiteMovesNum += 1
+            return True
+        
         for index in range(len(moveList)-1):
             legal = self.moveOneStep(playerNo,[moveList[index],moveList[index+1]])
             if legal == False:
@@ -188,6 +195,16 @@ class State(object):
     
     def posPossibleState(self,index,playerNo):
         newStateList    = []
+
+        #完全不動
+        newState            = State()
+        newState.board      = copy.deepcopy(self.board)
+        newState.playerNo   = 3 - playerNo
+        newState.visitCount = 0
+        newState.winScore   = 0
+        newState.board.performMove(playerNo,[])
+        newStateList.append(newState)
+
         for oneMove in self.AVAILABLE_ONE_MOVES:
             row = (index[0] + oneMove[0])
             col = (index[1] + oneMove[1])
@@ -218,17 +235,15 @@ class State(object):
                 newStateList.append(newState)
                 crossQueue.append(newState)
         
-        roun = 0
         while len(crossQueue) != 0:
-            roun = roun + 1
-            if roun > 10:
-                break
             tempState = crossQueue.pop()
             for crsMove in self.AVAILABLE_CROSS_MOVES:
                 row = tempState.moveList[-1][0] + crsMove[0]
                 col = tempState.moveList[-1][1] + crsMove[1]
                 imr = tempState.moveList[-1][0] + int(crsMove[0]/2)
-                imc = tempState.moveList[-1][1] + int(crsMove[1]/2)                
+                imc = tempState.moveList[-1][1] + int(crsMove[1]/2)  
+                if  [row,col] in tempState.moveList:
+                    break              
                 if row < 8 and row >= 0 and col < 8 and col >= 0 and tempState.board.boardValues[row][col] == 0 and tempState.board.boardValues[imr][imc] != 0:
                     newState       =  copy.deepcopy(tempState)
                     newState.board.performMove(playerNo,[[tempState.moveList[-1][0],tempState.moveList[-1][1]],[row,col]])
@@ -284,55 +299,6 @@ class State(object):
                 if ( col == 0 or col == 1 ) and boardValues[row][col] == 2:
                     playerscore -= 5
         return  playerscore
-    def evaluatePlay(self):
-        """
-        evaluate 這個 state
-        黑的專門 +
-        白的專門 -
-        """
-        playerscore = 0
-        playerChessNum = 0
-        opponentChessNum = 0
-        playerNo = self.playerNo
-        boardValues = self.board.boardValues
-        avgWXcoor = 0
-        whiteCount = 0
-        whiteIn = 0
-        avgBXcoor = 0
-        blackCount = 0
-        blackIn = 0
-        for row in range(8):
-            # Count Advantage
-            for col in range(8):
-                if boardValues[row][col] == 1:
-                    avgBXcoor += col
-                    blackCount += 1
-                if boardValues[row][col] == 2:
-                    avgWXcoor += col
-                    whiteCount += 1
-                if (col == 6 or col == 7) and boardValues[row][col] == 1:
-                    blackIn += 5
-                if (col == 0 or col == 1) and boardValues[row][col] == 2:
-                    whiteIn -= 5
-        # 計算棋子數量優勢
-        playerscore = (blackCount - whiteCount) * abs(blackCount - whiteCount)
-        # 計算距離優勢
-        if blackCount != 0 and whiteCount != 0:
-            advantage = ((avgBXcoor / blackCount) - ((avgWXcoor / whiteCount) - 7))
-            playerscore += advantage * abs(advantage)
-            playerscore += (blackIn - whiteIn) * abs(blackIn - whiteIn)
-        if blackCount == 0 and whiteCount != 0:
-            # white remaining
-            playerscore += ((avgWXcoor / whiteCount) - 7) * 10
-            playerscore += whiteIn * 100
-        if whiteCount == 0 and blackCount != 0:
-            # black remaining
-            playerscore += (avgBXcoor / blackCount) * 10
-            playerscore += blackIn * 100
-        return playerscore
-    
-    def togglePlayer(self):
-        self.playerNo = 3 - self.playerNo
     
 class Node():
     def __init__(self):
@@ -419,7 +385,7 @@ def backPropogation(nodeToExplore,playoutResult ,playerNo):
     """
     tempNode = nodeToExplore
     while tempNode != None:
-        tempNode.getState().incrementVisit()
+        tempNode.state.visitCount += 1
         if playerNo == 1:
             tempNode.state.winScore += playoutResult
         else:
@@ -482,7 +448,6 @@ def findNextMove(boardValues, playerNo,step,tree):
     
     maxx   = float('-inf')
     temp   = None
-    print(12333333)
     for childNode in rootNode.children:
         if childNode.state.winScore/ childNode.state.visitCount > maxx:
             temp   = childNode
@@ -519,10 +484,10 @@ def GetStep(boardValues, is_black , tree,step):
     #print(boardValues)
     #print(is_black)
     if is_black == True:
-        listStep = findNextMove(boardValues, 1, step,tree)
+        listStep,tree = findNextMove(boardValues, 1, step,tree)
     else:
-        listStep = findNextMove(boardValues, 2, step,tree)
-    return listStep
+        listStep,tree = findNextMove(boardValues, 2, step,tree)
+    return listStep,tree
 
 def main():
     tree  = Tree()
@@ -541,6 +506,7 @@ def main():
         find,tree = oppoentMove(board,tree)
         
         if find == 0:
+            print(123)
             tree  = Tree()
         
         listStep,tree = GetStep(board, is_black , tree, step)
