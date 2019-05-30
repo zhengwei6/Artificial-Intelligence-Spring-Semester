@@ -9,6 +9,3 @@ class Tree(object):
         return self.rootNode
     def setRoot(node):
         self.rootNode = node
-    def addChild(parent, child):
-        #TODO add child for parent
-        pass

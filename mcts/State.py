@@ -38,6 +38,8 @@ class State(object):
     
     def posPossibleState(self,index,playerNo):
         newStateList    = []
+        # 完全不動
+        
         for oneMove in self.AVAILABLE_ONE_MOVES:
             row = (index[0] + oneMove[0])
             col = (index[1] + oneMove[1])
@@ -68,17 +70,15 @@ class State(object):
                 newStateList.append(newState)
                 crossQueue.append(newState)
         
-        roun = 0
         while len(crossQueue) != 0:
-            roun = roun + 1
-            if roun > 10:
-                break
             tempState = crossQueue.pop()
             for crsMove in self.AVAILABLE_CROSS_MOVES:
                 row = tempState.moveList[-1][0] + crsMove[0]
                 col = tempState.moveList[-1][1] + crsMove[1]
                 imr = tempState.moveList[-1][0] + int(crsMove[0]/2)
-                imc = tempState.moveList[-1][1] + int(crsMove[1]/2)                
+                imc = tempState.moveList[-1][1] + int(crsMove[1]/2)
+                if  [row,col] in tempState.moveList:
+                    break    
                 if row < 8 and row >= 0 and col < 8 and col >= 0 and tempState.board.boardValues[row][col] == 0 and tempState.board.boardValues[imr][imc] != 0:
                     newState       =  copy.deepcopy(tempState)
                     newState.board.performMove(playerNo,[[tempState.moveList[-1][0],tempState.moveList[-1][1]],[row,col]])
@@ -99,7 +99,7 @@ class State(object):
             for col in range(8):
                 if tempBoard[row][col] == self.playerNo:
                     avaliableChessPos.append([row,col])
-        
+       
         newStateList   = []
         newMove        = []
         for index in avaliableChessPos:
@@ -118,22 +118,46 @@ class State(object):
         黑的專門 +
         白的專門 -
         """
-        playerscore   = 0
-        playerChessNum   = 0
+        playerscore = 0
+        playerChessNum = 0
         opponentChessNum = 0
-        playerNo    = self.playerNo
+        playerNo = self.playerNo
         boardValues = self.board.boardValues
+        avgWXcoor = 0
+        whiteCount = 0
+        whiteIn = 0
+        avgBXcoor = 0
+        blackCount = 0
+        blackIn = 0
         for row in range(8):
+            # Count Advantage
             for col in range(8):
                 if boardValues[row][col] == 1:
-                    playerscore += 10
-                if  boardValues[row][col] == 2:
-                    playerscore -= 10
-                if ( col == 6 or col == 7 ) and boardValues[row][col] == 1:
-                    playerscore += 5
-                if ( col == 0 or col == 1 ) and boardValues[row][col] == 2:
-                    playerscore -= 5
-        return  playerscore
+                    avgBXcoor += col
+                    blackCount += 1
+                if boardValues[row][col] == 2:
+                    avgWXcoor += col
+                    whiteCount += 1
+                if (col == 6 or col == 7) and boardValues[row][col] == 1:
+                    blackIn += 5
+                if (col == 0 or col == 1) and boardValues[row][col] == 2:
+                    whiteIn -= 5
+        # 計算棋子數量優勢
+        playerscore = (blackCount - whiteCount) * abs(blackCount - whiteCount)
+        # 計算距離優勢
+        if blackCount != 0 and whiteCount != 0:
+            advantage = ((avgBXcoor / blackCount) - ((avgWXcoor / whiteCount) - 7))
+            playerscore += advantage * abs(advantage)
+            playerscore += (blackIn - whiteIn) * abs(blackIn - whiteIn)
+        if blackCount == 0 and whiteCount != 0:
+            # white remaining
+            playerscore += ((avgWXcoor / whiteCount) - 7) * 10
+            playerscore += whiteIn * 100
+        if whiteCount == 0 and blackCount != 0:
+            # black remaining
+            playerscore += (avgBXcoor / blackCount) * 10
+            playerscore += blackIn * 100
+        return playerscore
     
     def togglePlayer(self):
         self.playerNo = 3 - self.playerNo

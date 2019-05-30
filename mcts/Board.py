@@ -66,6 +66,9 @@ class Board(object):
         #print( moveList)
         tempBoardValues = self.boardValues
         legal = True
+        if len(moveList) == 0:
+            return legal
+        
         for index in range(len(moveList)-1):
             legal = self.moveOneStep(playerNo,[moveList[index],moveList[index+1]])
             if legal == False:
@@ -96,14 +99,17 @@ class Board(object):
         """
         # check for black
         blackwin = 0
+        blackNum = 0
         whitewin = 0
+        whiteNum = 0
         for i in range(8):
             for j in range(8):
                 if self.boardValues[i][j] == 1 and ( j != 6 and j != 7 ):
                     blackwin = -1
                     break
-                elif self.boardValues[i][j] == 1 and ( j == 6 or j == 7 ):
-                    blackwin = 1
+                if ( j == 6 or j == 7) and self.boardValues[i][j] == 1:
+                    blackNum += 1
+            
             if blackwin == -1:
                 break
         
@@ -112,48 +118,32 @@ class Board(object):
                 if self.boardValues[i][j] == 2 and ( j != 0 and j != 1):
                     whitewin = -1
                     break
-                elif self.boardValues[i][j] == 2 and ( j == 0 or j == 1):
-                    whitewin = 1
+                if ( j == 0 or j == 1) and self.boardValues[i][j] == 2:
+                    whiteNum += 1
             if whitewin == -1:
                 break
         
-        if blackwin == 1 and whitewin == 0:    #黑棋全部都在區域內且白棋都被吃光 
-            return 1 
-        elif blackwin == 1 and whitewin == -1: #黑棋全部都在區域內且白棋還有
-            return 2
-        elif whitewin == 1 and blackwin == 0:  #白棋都在區域內且黑棋被吃光
-            return 3
-        elif whitewin == 1 and blackwin == -1: #白棋都在區域內且黑棋還有
-            return 4
-        elif whitewin == 0 and blackwin == 0:  #白棋全部沒在區域且黑棋也是
-            return 5
-        return -1
+        if blackwin == 0:
+            return 1,blackNum,whiteNum
+        if whitewin == 0:
+            return 2,blackNum,whiteNum
+
+        return -1,blackNum,whiteNum
                     
     def checkStatus(self,step):
         """
         @param
         @return  如果是黑子獲勝 回傳 1 如果是白子獲勝 回傳 2 如果還在進行中 回傳 IN_PROGRESS (-1) 平手 DRAW (0)
         """
-        allInRegion = self.checkInRegion()
-
-        if (self.whiteMovesNum >= step and self.blackMovesNum >= step) or (allInRegion != -1 and allInRegion != 2 and allInRegion != 4):
-            if allInRegion == 5:
-                return self.DRAW
-            blackNum = 0
-            whiteNum = 0
-            for i in range(8):
-                for j in range(8):
-                    if ( j == 6 or j == 7) and self.boardValues[i][j] == 1:
-                        blackNum += 1
-                    if ( j == 0 or j == 1) and self.boardValues[i][j] == 2:
-                        whiteNum += 1
-            
-            if blackNum > whiteNum:
-                return 1
-            elif blackNum < whiteNum:
-                return 2
-            else:
-                return self.DRAW
+        if self.whiteMovesNum >= step and self.blackMovesNum >= step :    
+            allInRegion,blackNum,whiteNum = self.checkInRegion()
+            if allInRegion != -1:
+                if blackNum > whiteNum:
+                    return 1
+                elif blackNum < whiteNum:
+                    return 2
+                else:
+                    return self.DRAW
         return -1
     
 

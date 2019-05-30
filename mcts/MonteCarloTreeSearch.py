@@ -26,7 +26,6 @@ def findBestNodeWithUCT(node):
             returnNode = childNode
             maxValue = value
     return returnNode
-            
     
 def selectPromisingNode(rootNode):
     """
@@ -64,14 +63,21 @@ def checkChess(boardValues, playerNo):
         return True
     return False
 
-def findNextMove(boardValues, playerNo,step):
+def displayChildInfo(rootNode):
+    for child in rootNode.children:
+        print("playerNo",child.state.playerNo,"winscore",child.state.winScore)
+        print(child.state.moveList)
+    print("----------------------------")
+
+def findNextMove(boardValues, playerNo,tree,step):
     if not checkChess(boardValues, playerNo):
         return [[0,0],[1,1]]
-    
-    tree = Tree()
-    rootNode = tree.getRoot()
+
+    rootNode = tree.rootNode
     rootNode.state.board.boardValues = boardValues
     rootNode.getState().setPlayerNo(playerNo)
+    
+
     if playerNo == 1:
         rootNode.state.board.blackMovesNum = step
         rootNode.state.board.whiteMovesNum = step
@@ -79,11 +85,10 @@ def findNextMove(boardValues, playerNo,step):
         rootNode.state.board.blackMovesNum = step + 1
         rootNode.state.board.whiteMovesNum = step
     
-    for i in range(5000):
+    for i in range(1000):
         # Run as much as possible under the computation budget
         # Phase 1 - Selection
         promisingNode = selectPromisingNode(rootNode)
-        #print(promisingNode.state.board.boardValues)
         # Phase 2 - Expansion
         if promisingNode.getState().getBoard().checkStatus(200) == Board.IN_PROGRESS:
             promisingNode.getRandomChildNode()
@@ -96,31 +101,56 @@ def findNextMove(boardValues, playerNo,step):
         
         #Phase 4 - Update
         backPropogation(nodeToExplore, playoutResult, playerNo)
-        #print(rootNode.state.winScore,rootNode.state.visitCount)
     
-    maxx = float('-inf')
-    temp = None
+    maxx   = float('-inf')
+    temp   = None
+    displayChildInfo(rootNode)
     for childNode in rootNode.children:
         if childNode.state.winScore/ childNode.state.visitCount > maxx:
-            temp = childNode
-            maxx = childNode.state.winScore / childNode.state.visitCount
-        print(childNode.state.playerNo,childNode.state.winScore,childNode.state.visitCount,childNode.state.moveList)
-    #print(maxx)
-    print(temp.state.moveList)
-    return temp.state.moveList
+            temp   = childNode
+            maxx   = childNode.state.winScore / childNode.state.visitCount
 
+    tree.rootNode = temp
+    tree.rootNode.parent = None
+    return temp.state.moveList,tree
+
+def oppoentMove(boardValues,tree):
+    find = 0
+    for childNode in tree.rootNode.children:
+        if boardValues == childNode.state.board.boardValues :
+            tree.rootNode = childNode
+            find          = 1
+            return tree
+    if find == 0:  
+        return None
+    
 def main():
-    playerNo    = 2
+    tree        = Tree()
+    playerNo    = 1
     step        = 180
-    boardValues = [ [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
+    boardValues = [ [1,0,0,0,0,0,2,0],
+                    [0,0,0,0,0,0,2,0],
+                    [0,0,0,0,0,0,2,0],
                     [0,0,0,1,2,0,0,0],
-                    [0,0,1,0,0,0,0,0],
+                    [0,0,0,0,0,2,0,0],
+                    [0,0,0,0,0,0,2,0],
                     [0,0,0,0,0,0,0,0],
-                    [0,0,1,0,0,0,0,0],
                     [0,0,0,0,0,0,0,0]]
-    findNextMove(boardValues,playerNo,step)
+
+    moveList,tree = findNextMove(boardValues,playerNo,tree,step)
+    print(moveList)
+    playerNo    = 1
+    step        = 181
+    boardValues = [ [1,0,0,0,0,0,2,0],
+                    [0,0,0,0,0,0,2,0],
+                    [0,0,0,0,0,2,0,0],
+                    [0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,1],
+                    [0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0]]
+    tree = oppoentMove(boardValues,tree)
+    moveList,tree = findNextMove(boardValues,playerNo,tree,step)
+    
 if __name__ == "__main__":
     main()
-

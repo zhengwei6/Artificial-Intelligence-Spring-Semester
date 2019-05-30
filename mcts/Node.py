@@ -37,6 +37,3 @@ class Node():
             newNode.state = newState
             self.children.append(newNode)
         
-    def getChildWithMaxScore():
-        #TODO return the child having ???
-        pass
